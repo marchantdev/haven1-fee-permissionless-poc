@@ -1,0 +1,13 @@
+{
+  "name": "haven1-fee-permissionless-poc",
+  "version": "1.0.0",
+  "description": "PoC for Haven1 FeeContract.setGraceContract() permissionless access control vulnerability",
+  "scripts": {
+    "test": "npx hardhat test",
+    "compile": "npx hardhat compile"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.0"
+  }
+}
